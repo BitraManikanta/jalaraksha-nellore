@@ -2,15 +2,15 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, NavLink, Route, Routes } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
 import { CATEGORIES } from './validation';
-
-const PDF = '/report/JalaRaksha-Nellore-CSP-Report-MD-Almas-Afeefa.pdf';
+import Logo from './Logo';
+import { PDF, PHOTOS, collegeLogo } from './assets';
 const LABEL: Record<string, string> = { sewage: 'Sewage / drain overflow', solid_waste: 'Solid waste dumping', plastics: 'Plastics',
   industrial: 'Industrial discharge', agricultural: 'Agricultural runoff', oil_chemical: 'Oil / chemicals', other: 'Other' };
 const STATUSES = ['received', 'under_review', 'forwarded', 'resolved', 'closed'];
 
-function Page({ title, children }: { title: string; children: ReactNode }) {
+function Page({ title, children, hideTitle }: { title: string; children: ReactNode; hideTitle?: boolean }) {
   useEffect(() => { document.title = `${title} | JalaRaksha Nellore`; }, [title]);
-  return <main><h1>{title}</h1>{children}</main>;
+  return <main>{!hideTitle && <h1>{title}</h1>}{children}</main>;
 }
 async function post(url: string, body: unknown) {
   const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -20,15 +20,25 @@ async function post(url: string, body: unknown) {
 }
 
 function Home() {
-  return <Page title="JalaRaksha Nellore">
-    <p>Learn about water pollution, report problems in Nellore, and find official complaint channels.</p>
-    <p><Link className="btn" to="/report">Report a problem</Link> <Link className="btn alt" to="/learn">Learn more</Link></p>
-    <div className="grid">{[['Sewage', 'Untreated wastewater spreads germs and removes oxygen from water.'], ['Plastics & solid waste', 'Litter blocks drains and harms animals.'],
-      ['Chemicals & oil', 'Detergents, oils and pesticides can poison water life.'], ['Runoff', 'Rain washes fertiliser and soil into ponds and canals.']]
-      .map(([t, d]) => <div className="card" key={t}><h3>{t}</h3><p>{d}</p></div>)}</div>
-    <h2>How it works</h2><ol><li>Report what you saw.</li><li>Save your reference number and PIN.</li><li>Track the status. Also use the official channel.</li></ol>
+  const cats: [string, string, string, string][] = [['💧', 'Sewage', 'Untreated wastewater spreads germs and removes oxygen from water.', '#0b8fb5'],
+    ['♻️', 'Plastics & solid waste', 'Litter blocks drains, floats on water and harms animals.', '#3f9b5f'],
+    ['🧪', 'Chemicals & oil', 'Detergents, oils and pesticides can poison water life.', '#8a5cc2'], ['🌧️', 'Runoff', 'Rain washes fertiliser and soil into ponds and canals.', '#e08a1e']];
+  const steps: [string, string][] = [['Report', 'Tell us what you saw, where and when. Add a photo if you can.'], ['Save', 'Keep your reference number and private PIN safe.'], ['Track', 'Check your report status here, and also use the official channel.']];
+  return <><section className="hero" style={{ backgroundImage: `linear-gradient(rgba(6,60,90,.8),rgba(15,139,141,.7)),url(${PHOTOS[0].full})` }}>
+      <div className="hero-in"><Logo size={84} /><h1>JalaRaksha Nellore</h1><p className="lead">Protecting our water together. Learn about water pollution, report problems in Nellore and find official complaint channels.</p>
+        <p><Link className="btn light" to="/report">Report a problem</Link> <Link className="btn ghost" to="/learn">Learn more</Link> <Link className="btn ghost" to="/track">Track a report</Link></p></div></section>
+    <svg className="wave" viewBox="0 0 1200 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 Q150 0 300 30 T600 30 T900 30 T1200 30 V60 H0Z" fill="#f3fafc" /></svg>
+    <Page title="JalaRaksha Nellore" hideTitle>
+    <h2 className="sec">Main water pollution problems</h2>
+    <div className="grid">{cats.map(([i, t, d, c]) => <div className="card cat" key={t} style={{ borderTopColor: c }}><div className="ico" style={{ background: c }}>{i}</div><h3>{t}</h3><p>{d}</p></div>)}</div>
+    <h2 className="sec">How it works</h2>
+    <div className="grid">{steps.map(([t, d], n) => <div className="card step" key={t}><span className="num">{n + 1}</span><h3>{t}</h3><p>{d}</p></div>)}</div>
+    <div className="cta"><h2>See something wrong near you?</h2><p>Reporting takes about two minutes and helps your community.</p><Link className="btn light" to="/report">Report now</Link></div>
+    <h2 className="sec">From our field visits</h2>
+    <div className="grid">{PHOTOS.slice(1, 4).map(p => <figure className="card" key={p.full}><img loading="lazy" src={p.thumb} alt={p.caption} /><figcaption>{p.caption}</figcaption></figure>)}</div>
+    <p><Link to="/gallery">See all photographs</Link></p>
     <p className="warn">JalaRaksha is an independent student project. It is not run by or affiliated with Nellore Municipal Corporation.</p>
-  </Page>;
+  </Page></>;
 }
 function Learn() {
   const rows = [['Physical', 'Plastic, debris, soil', 'Cloudy water, blocked flow'], ['Biological', 'Sewage, animal waste', 'Disease-causing germs'],
@@ -41,10 +51,10 @@ function Learn() {
   </Page>;
 }
 function Awareness() {
-  return <Page title="Community awareness"><div className="grid">{[['Waste segregation', 'Keep wet, dry and hazardous waste separate.'],
-    ['No dumping', 'Never throw waste, oil or paint into drains, ponds or canals.'], ['Save water', 'Fix leaks, turn off taps, reuse water safely.'],
-    ['Rainwater harvesting', 'Collect roof rainwater; treat it before drinking.'], ['Detergents', 'Use small amounts; avoid washing at the water edge.'],
-    ['Cleanups', 'Wear gloves, avoid entering polluted water, hand waste to the municipal service.']]
+  return <Page title="Community awareness"><div className="grid">{[['♻️ Waste segregation', 'Keep wet, dry and hazardous waste separate.'],
+    ['🚫 No dumping', 'Never throw waste, oil or paint into drains, ponds or canals.'], ['💧 Save water', 'Fix leaks, turn off taps, reuse water safely.'],
+    ['🌧️ Rainwater harvesting', 'Collect roof rainwater; treat it before drinking.'], ['🧼 Detergents', 'Use small amounts; avoid washing at the water edge.'],
+    ['🧤 Cleanups', 'Wear gloves, avoid entering polluted water, hand waste to the municipal service.']]
     .map(([t, d]) => <div className="card" key={t}><h3>{t}</h3><p>{d}</p></div>)}</div></Page>;
 }
 function Report() {
@@ -95,20 +105,16 @@ function Track() {
     {d && <div className="card"><p>Status: <b>{LABEL[d.status] ?? d.status.replace('_', ' ')}</b></p><p>Category: {LABEL[d.category]} | Locality: {d.locality}</p>
       <p>Emailed by this site: {d.email_status === 'sent' ? 'Yes' : 'No'}</p><p className="warn">This is this website's own status, not live municipal tracking.</p></div>}</Page>;
 }
-const PHOTOS: [string, string][] = [['waterbody-bank-16oct', 'Waterbody and surrounding bank, Guruthota, 16 Oct 2026'], ['waste-at-water-edge-16oct', 'Mixed waste and packaging near the water edge, 16 Oct 2026'],
-  ['waste-accumulation-golla-st', 'Waste accumulation close to the water edge, 16 Oct 2026'], ['waterbody-and-public-structure', 'Waterbody and a nearby public structure, 16 Oct 2026'],
-  ['student-team-at-waterbody', 'Student team documenting the waterbody setting, 16 Oct 2026'], ['letter-handover-panchayat', 'Students presenting the project letter to the Panchayat Secretary, 16 Oct 2026'],
-  ['group-community-visit', 'Group photograph during the community visit, 16 Oct 2026'], ['water-access-area-30oct', 'Water-access area (GPS tag: Dargamitta water tank), 30 Oct 2026']];
 function Gallery() {
   return <Page title="Field photographs"><p>Photographs from the CSP field visits. They show visible conditions only and are not laboratory evidence.</p>
-    <div className="grid">{PHOTOS.map(([f, c]) => <figure className="card" key={f}><a href={`/gallery/${f}.jpg`}><img loading="lazy" src={`/gallery/${f}-thumb.jpg`} alt={c} /></a><figcaption>{c}</figcaption></figure>)}</div></Page>;
+    <div className="grid">{PHOTOS.map(p => <figure className="card" key={p.full}><a href={p.full} target="_blank" rel="noopener"><img loading="lazy" src={p.thumb} alt={p.caption} /></a><figcaption>{p.caption}</figcaption></figure>)}</div></Page>;
 }
 function Csp() {
   return <Page title="CSP report"><p>Full report by MD. Almas Afeefa (24JNA30104).</p><p><a className="btn" href={PDF} target="_blank" rel="noopener">View PDF</a> <a className="btn alt" href={PDF} download>Download PDF</a></p></Page>;
 }
 function About() {
   return <Page title="About the project"><div className="card"><p><b>A Comprehensive Study of Water Pollution, Its Causes and Consequences, and Community-Based Strategies for Clean and Sustainable Water Resources</b></p>
-    <p>Student: MD. Almas Afeefa (24JNA30104), AI &amp; DS (B), III B.Tech<br />Guide: Guru Prasad, CSE Department<br />College: Sree Venkateswara College of Engineering, North Rajupalem, Nellore<br />Period: 16 September to 30 October 2026</p></div>
+    <p>Student: MD. Almas Afeefa (24JNA30104), AI &amp; DS (B), III B.Tech<br />Guide: Guru Prasad, CSE Department<br />College: Sree Venkateswara College of Engineering, North Rajupalem, Nellore<br />Period: 16 September to 30 October 2026</p><img src={collegeLogo} alt="Sree Venkateswara College of Engineering logo" width="70" /></div>
     <h2>Method and limits</h2><p>Community visits, visual observation and photographs in Guruthota and nearby areas. No laboratory results are claimed.</p>
     <p className="warn">Independent student initiative. Not officially affiliated with Nellore Municipal Corporation.</p></Page>;
 }
@@ -164,7 +170,7 @@ function Admin() {
 export default function App() {
   const [open, setOpen] = useState(false);
   const links: [string, string][] = [['/', 'Home'], ['/learn', 'Learn'], ['/report', 'Report'], ['/track', 'Track'], ['/awareness', 'Awareness'], ['/gallery', 'Gallery'], ['/csp-report', 'CSP Report'], ['/about', 'About'], ['/contact', 'Contact']];
-  return <><a href="#main" className="hp">Skip to content</a><header><div className="bar"><Link to="/" className="brand"><img src="/college-logo-1.png" alt="" width="36" height="36" />JalaRaksha Nellore</Link>
+  return <><a href="#main" className="hp">Skip to content</a><header><div className="bar"><Link to="/" className="brand"><Logo size={40} />JalaRaksha Nellore</Link>
     <button className="btn menu" aria-expanded={open} onClick={() => setOpen(!open)}>Menu</button>
     <nav className={open ? 'open' : ''} onClick={() => setOpen(false)}>{links.map(([to, t]) => <NavLink key={to} to={to}>{t}</NavLink>)}</nav></div></header>
     <div id="main"><Routes><Route path="/" element={<Home />} /><Route path="/learn" element={<Learn />} /><Route path="/report" element={<Report />} /><Route path="/track" element={<Track />} />
